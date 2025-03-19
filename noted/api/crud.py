@@ -86,7 +86,6 @@ def create_note(note: Note):
             raise HTTPException(status_code=409, detail="Note with this ID already exists")
         raise HTTPException(status_code=500, detail=f"Error creating note: {str(e)}")
 
-
 def get_note(note_id: str) -> Optional[Note]:
     try:
         response = table.get_item(Key={'id ': note_id})
@@ -97,15 +96,33 @@ def get_note(note_id: str) -> Optional[Note]:
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving note: {e}")
 
+def get_all_notes() -> List[Note]:
+    try:
+        response = table.scan()
+        items = response.get('Items', [])
+
+        notes = []
+        for item in items:
+           
+            note_data = {
+                'id': item.get('id ', ''),
+                'title': item.get('title', ''),
+                'body': item.get('body', ''),
+                'created_at': item.get('created_at', '')
+            }
+            notes.append(Note(**note_data))
+        return notes
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving notes: {e}")
 
 def update_note(note_id: str, note: Note):
     try:
-        # Update only the body field, keep the created_at unchanged
         response = table.update_item(
             Key={'id ': note_id},
-            UpdateExpression="set body = :b",  # Only update the body field
+            UpdateExpression="set title = :t, body = :b",
             ExpressionAttributeValues={
-                ':b': note.body,  # New body value
+                ':t': note.title,
+                ':b': note.body,
             },
             ReturnValues="UPDATED_NEW"
         )

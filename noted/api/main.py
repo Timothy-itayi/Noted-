@@ -22,12 +22,20 @@ class NoteResponse(NoteRequest):
 # Root endpoint
 @app.get("/")
 def read_root():
-    return {"message": "Notes of notes"}
+    try:
+        notes = crud.get_all_notes()
+        return {"message": "Notes of notes", "notes": notes}
+    except HTTPException as e:
+        raise e
 
 # List notes
 @app.get("/notes/")
 def read_notes():
-    return {"message": "List of notes"}
+    try:
+        notes = crud.get_all_notes()
+        return notes
+    except HTTPException as e:
+        raise e
 
 # Create a new note
 @app.post("/notes/", response_model=NoteResponse)

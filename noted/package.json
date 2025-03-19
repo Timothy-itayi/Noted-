@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "98.css": "^0.1.20",
     "dynamoose": "^4.0.3",
     "next": "15.2.3",
     "react": "^19.0.0",
