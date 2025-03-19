@@ -5,7 +5,7 @@ from . import crud
 
 app = FastAPI()
 
-#
+# Define NoteRequest and NoteResponse models
 class NoteRequest(BaseModel):
     title: str
     body: str
@@ -14,6 +14,17 @@ class NoteRequest(BaseModel):
 class NoteResponse(NoteRequest):
     pass
 
+# Root endpoint
+@app.get("/")
+def read_root():
+    return {"message": "Notes of notes"}
+
+# List notes
+@app.get("/notes/")
+def read_notes():
+    return {"message": "List of notes"}
+
+# Create a new note
 @app.post("/notes/", response_model=NoteResponse)
 async def create_note(note: NoteRequest):
     try:
@@ -22,6 +33,7 @@ async def create_note(note: NoteRequest):
     except HTTPException as e:
         raise e
 
+# Get a specific note by title
 @app.get("/notes/{title}", response_model=NoteResponse)
 async def get_note(title: str):
     note = crud.get_note(title)
@@ -30,6 +42,7 @@ async def get_note(title: str):
     else:
         raise HTTPException(status_code=404, detail="Note not found")
 
+# Update a note
 @app.put("/notes/{title}", response_model=NoteResponse)
 async def update_note(title: str, note: NoteRequest):
     try:
@@ -38,6 +51,7 @@ async def update_note(title: str, note: NoteRequest):
     except HTTPException as e:
         raise e
 
+# Delete a note
 @app.delete("/notes/{title}", response_model=dict)
 async def delete_note(title: str):
     try:
