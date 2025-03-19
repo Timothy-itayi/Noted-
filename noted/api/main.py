@@ -3,16 +3,21 @@ from pydantic import BaseModel
 from typing import List, Optional
 from . import crud  
 
+
 app = FastAPI()
 
-# Define NoteRequest and NoteResponse models
+
 class NoteRequest(BaseModel):
+  
     title: str
     body: str
-    created_at: str
+ 
 
 class NoteResponse(NoteRequest):
-    pass
+ 
+   title: str
+   body: str
+   created_at: str
 
 # Root endpoint
 @app.get("/")
@@ -28,11 +33,11 @@ def read_notes():
 @app.post("/notes/", response_model=NoteResponse)
 async def create_note(note: NoteRequest):
     try:
-        response = crud.create_note(note)
-        return response['ResponseMetadata']  
+        # Let the backend handle the created_at generation
+        note_data = crud.create_note(note)
+        return note_data
     except HTTPException as e:
         raise e
-
 # Get a specific note by title
 @app.get("/notes/{title}", response_model=NoteResponse)
 async def get_note(title: str):
@@ -46,8 +51,9 @@ async def get_note(title: str):
 @app.put("/notes/{title}", response_model=NoteResponse)
 async def update_note(title: str, note: NoteRequest):
     try:
-        response = crud.update_note(title, note)
-        return response['Attributes']  # Or return custom response as needed
+        note_data = note.dict()
+        response = crud.update_note(title, note_data)
+        return response['Attributes']  
     except HTTPException as e:
         raise e
 
