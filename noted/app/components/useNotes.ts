@@ -58,6 +58,12 @@ export function useNotes() {
 
   const handleDelete = async (id: string) => {
     try {
+      // Validate ID before making the request
+      if (!id) {
+        console.error('Cannot delete note: Invalid ID');
+        return;
+      }
+
       console.log('Attempting to delete note with ID:', id);
       console.log('Current notes before delete:', notes);
       
