@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import * as dynamoose from 'dynamoose';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { NextRequest } from 'next/server';
 
 // Configure DynamoDB
 const client = new DynamoDB({
@@ -43,16 +44,18 @@ export async function GET(request: Request) {
 }
 
 // POST /api/notes - Create a new note
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   console.log(`[${request.method}] ${request.url}`);
   try {
     const body = await request.json();
-    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
     const note = {
-      id,
-      ...body,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      id: crypto.randomUUID(), // Generate a UUID for the ID
+      title: body.title,
+      body: body.body,
+      created_at: now,
+      updated_at: now,
     };
     
     await Note.create(note);
