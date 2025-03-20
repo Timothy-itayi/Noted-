@@ -1,4 +1,19 @@
 import { NextResponse } from 'next/server';
+import * as dynamoose from 'dynamoose';
+
+// Define the Note schema
+const NoteSchema = new dynamoose.Schema({
+  id: {
+    type: String,
+    hashKey: true,
+  },
+  title: String,
+  body: String,
+  created_at: String,
+  updated_at: String,
+});
+
+const Note = dynamoose.model('Note', NoteSchema);
 
 // GET /api/notes/[id] - Get a specific note
 export async function GET(
@@ -6,15 +21,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`http://localhost:8000/notes/${params.id}`);
-    if (!response.ok) {
+    const note = await Note.get(params.id);
+    if (!note) {
       return NextResponse.json(
         { error: 'Note not found' },
         { status: 404 }
       );
     }
-    const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(note);
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch note' },
@@ -30,23 +44,23 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const response = await fetch(`http://localhost:8000/notes/${params.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
+    const existingNote = await Note.get(params.id);
+    
+    if (!existingNote) {
       return NextResponse.json(
         { error: 'Note not found' },
         { status: 404 }
       );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    const updatedNote = {
+      ...existingNote,
+      ...body,
+      updated_at: new Date().toISOString(),
+    };
+    
+    await Note.update({ id: params.id }, updatedNote);
+    return NextResponse.json(updatedNote);
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to update note' },
@@ -61,18 +75,16 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`http://localhost:8000/notes/${params.id}`, {
-      method: 'DELETE',
-    });
-
-    if (!response.ok) {
+    const note = await Note.get(params.id);
+    if (!note) {
       return NextResponse.json(
         { error: 'Note not found' },
         { status: 404 }
       );
     }
-
-    return NextResponse.json({ message: 'Note deleted successfully' });
+    
+    await Note.delete(params.id);
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to delete note' },
