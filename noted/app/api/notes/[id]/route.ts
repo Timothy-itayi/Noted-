@@ -94,6 +94,16 @@ export async function DELETE(
   console.log(`[${request.method}] ${request.url}`);
   try {
     const { id } = await props.params;
+    
+    // Validate ID
+    if (!id) {
+      console.error('Invalid ID provided for deletion');
+      return NextResponse.json(
+        { error: 'Invalid note ID' },
+        { status: 400 }
+      );
+    }
+
     console.log('Attempting to delete note with ID:', id);
     
     // First check if the note exists
