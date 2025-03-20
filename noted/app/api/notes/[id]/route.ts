@@ -18,11 +18,11 @@ const Note = dynamoose.model('Note', NoteSchema);
 // GET /api/notes/[id] - Get a specific note
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   console.log(`[${request.method}] ${request.url}`);
   try {
-    const note = await Note.get(params.id);
+    const note = await Note.get(context.params.id);
     if (!note) {
       return NextResponse.json(
         { error: 'Note not found' },
@@ -42,12 +42,12 @@ export async function GET(
 // PUT /api/notes/[id] - Update a note
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   console.log(`[${request.method}] ${request.url}`);
   try {
     const body = await request.json();
-    const existingNote = await Note.get(params.id);
+    const existingNote = await Note.get(context.params.id);
     
     if (!existingNote) {
       return NextResponse.json(
@@ -62,7 +62,7 @@ export async function PUT(
       updated_at: new Date().toISOString(),
     };
     
-    await Note.update({ id: params.id }, updatedNote);
+    await Note.update({ id: context.params.id }, updatedNote);
     return NextResponse.json(updatedNote);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
@@ -76,11 +76,11 @@ export async function PUT(
 // DELETE /api/notes/[id] - Delete a note
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   console.log(`[${request.method}] ${request.url}`);
   try {
-    const note = await Note.get(params.id);
+    const note = await Note.get(context.params.id);
     if (!note) {
       return NextResponse.json(
         { error: 'Note not found' },
@@ -88,7 +88,7 @@ export async function DELETE(
       );
     }
     
-    await Note.delete(params.id);
+    await Note.delete(context.params.id);
     return NextResponse.json({ success: true });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
