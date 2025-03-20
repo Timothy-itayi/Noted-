@@ -118,9 +118,9 @@ export async function DELETE(
       );
     }
     
-    // Delete the note
+    // Delete the note using the correct Dynamoose method
     console.log('Deleting note...');
-    await Note.delete({ id });  // Pass id as an object
+    await Note.delete(id);  // Pass id directly, not as an object
     console.log('Note deleted successfully');
     
     return NextResponse.json({ success: true });
