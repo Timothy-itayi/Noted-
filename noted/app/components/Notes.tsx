@@ -78,13 +78,14 @@ export default function Notes() {
               <div className="title-bar">
                 <div className="title-bar-text">{note.title}</div>
                 <div className="title-bar-controls">
-                  <button aria-label="Close" onClick={() => note.id && handleDelete(note.id)}></button>
+                
                 </div>
               </div>
               <div className="window-body">
                 <p>{note.body}</p>
                 <div className="field-row mt-4">
-                  <button onClick={() => handleEdit(note)}>Edit</button>
+                  <button onClick={() => handleEdit(note)}>Edit</button> 
+                 <button  onClick={() => handleDelete(note.id)}>Delete</button>
                 </div>
               </div>
             </div>
