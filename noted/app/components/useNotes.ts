@@ -58,15 +58,29 @@ export function useNotes() {
 
   const handleDelete = async (id: string) => {
     try {
+      console.log('Attempting to delete note with ID:', id);
+      console.log('Current notes before delete:', notes);
+      
       const response = await fetch(`/api/notes/${id}`, {
         method: 'DELETE',
       });
-
+      
+      console.log('Delete response status:', response.status);
+      
       if (response.ok) {
-        setNotes(notes.filter(note => note.id !== id));
+        console.log('Delete successful, updating notes state');
+        const updatedNotes = notes.filter(note => note.id !== id);
+        console.log('Updated notes after delete:', updatedNotes);
+        setNotes(updatedNotes);
+      } else {
+        console.error('Delete failed with status:', response.status);
+        // Try to fetch fresh data if delete failed
+        await fetchNotes();
       }
     } catch (error) {
       console.error('Error deleting note:', error);
+      // Try to fetch fresh data if delete failed
+      await fetchNotes();
     }
   };
 
