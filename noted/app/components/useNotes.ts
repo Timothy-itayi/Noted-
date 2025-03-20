@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 interface Note {
-  id?: string;
+  id: string;
   title: string;
   body: string;
   created_at?: string;
@@ -18,7 +18,7 @@ export function useNotes() {
     e.preventDefault();
     
     try {
-      if (isEditing && currentNote) {
+      if (isEditing && currentNote?.id) {
         // Update note
         const response = await fetch(`/api/notes/${currentNote.id}`, {
           method: 'PUT',
@@ -83,7 +83,7 @@ export function useNotes() {
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {
-          setNotes(data.filter(note => note.title && note.body)); // Only show notes with content
+          setNotes(data.filter(note => note.id && note.title && note.body));
         } else {
           console.error('Received non-array data:', data);
           setNotes([]);
