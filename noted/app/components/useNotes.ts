@@ -79,18 +79,38 @@ export function useNotes() {
 
   const fetchNotes = async () => {
     try {
+      console.log('Fetching notes...');
       const response = await fetch('/api/notes');
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Received data:', data);
+        
         if (Array.isArray(data)) {
-          setNotes(data.filter(note => note.id && note.title && note.body));
+          // Log each note before filtering
+          console.log('Notes before filtering:', data);
+          
+          // Only filter out completely invalid notes
+          const validNotes = data.filter(note => {
+            const isValid = note && typeof note === 'object';
+            console.log('Note validation:', note, isValid);
+            return isValid;
+          });
+          
+          console.log('Notes after filtering:', validNotes);
+          setNotes(validNotes);
         } else {
           console.error('Received non-array data:', data);
           setNotes([]);
         }
+      } else {
+        console.error('Failed to fetch notes:', response.status);
+        setNotes([]);
       }
     } catch (error) {
       console.error('Error fetching notes:', error);
+      setNotes([]);
     }
   };
 
