@@ -28,11 +28,13 @@ const NoteSchema = new dynamoose.Schema({
 const Note = dynamoose.model('Note', NoteSchema);
 
 // GET /api/notes - Fetch all notes
-export async function GET() {
+export async function GET(request: Request) {
+  console.log(`[${request.method}] ${request.url}`);
   try {
     const notes = await Note.scan().exec();
     return NextResponse.json(notes);
-  } catch (_error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch notes' },
       { status: 500 }
@@ -42,6 +44,7 @@ export async function GET() {
 
 // POST /api/notes - Create a new note
 export async function POST(request: Request) {
+  console.log(`[${request.method}] ${request.url}`);
   try {
     const body = await request.json();
     const id = crypto.randomUUID();
@@ -54,7 +57,8 @@ export async function POST(request: Request) {
     
     await Note.create(note);
     return NextResponse.json(note);
-  } catch (_error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to create note' },
       { status: 500 }

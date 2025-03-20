@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import * as dynamoose from 'dynamoose';
 
 // Define the Note schema
@@ -20,6 +20,7 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  console.log(`[${request.method}] ${request.url}`);
   try {
     const note = await Note.get(params.id);
     if (!note) {
@@ -29,7 +30,8 @@ export async function GET(
       );
     }
     return NextResponse.json(note);
-  } catch (_error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch note' },
       { status: 500 }
@@ -42,6 +44,7 @@ export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  console.log(`[${request.method}] ${request.url}`);
   try {
     const body = await request.json();
     const existingNote = await Note.get(params.id);
@@ -61,7 +64,8 @@ export async function PUT(
     
     await Note.update({ id: params.id }, updatedNote);
     return NextResponse.json(updatedNote);
-  } catch (_error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to update note' },
       { status: 500 }
@@ -74,6 +78,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  console.log(`[${request.method}] ${request.url}`);
   try {
     const note = await Note.get(params.id);
     if (!note) {
@@ -85,7 +90,8 @@ export async function DELETE(
     
     await Note.delete(params.id);
     return NextResponse.json({ success: true });
-  } catch (_error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to delete note' },
       { status: 500 }
