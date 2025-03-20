@@ -94,18 +94,29 @@ export async function DELETE(
   console.log(`[${request.method}] ${request.url}`);
   try {
     const { id } = await props.params;
+    console.log('Attempting to delete note with ID:', id);
+    
+    // First check if the note exists
     const note = await Note.get(id);
+    console.log('Found note:', note);
+    
     if (!note) {
+      console.log('Note not found, returning 404');
       return NextResponse.json(
         { error: 'Note not found' },
         { status: 404 }
       );
     }
     
-    await Note.delete(id);
+    // Delete the note
+    console.log('Deleting note...');
+    await Note.delete({ id });  // Pass id as an object
+    console.log('Note deleted successfully');
+    
     return NextResponse.json({ success: true });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
+    console.error('Error in DELETE handler:', error);
     return NextResponse.json(
       { error: 'Failed to delete note' },
       { status: 500 }
