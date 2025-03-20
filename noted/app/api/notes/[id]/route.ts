@@ -19,20 +19,31 @@ const Note = dynamoose.model('Note', NoteSchema);
 // GET /api/notes/[id] - Get a specific note
 export async function GET(
   request: NextRequest,
-  { params }: { params: Record<string, string | string[]> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  // Log the request details
   console.log(`[${request.method}] ${request.url}`);
+  
   try {
-    const note = await Note.get(params.id as string);
+    // Get params from Promise
+    const { id } = await props.params;
+    
+    // Get note by ID from DynamoDB
+    const note = await Note.get(id);
+    
+    // Check if note exists
     if (!note) {
       return NextResponse.json(
         { error: 'Note not found' },
         { status: 404 }
       );
     }
+    
+    // Return the note if found
     return NextResponse.json(note);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
+    // Handle any errors
     return NextResponse.json(
       { error: 'Failed to fetch note' },
       { status: 500 }
@@ -43,12 +54,13 @@ export async function GET(
 // PUT /api/notes/[id] - Update a note
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Record<string, string | string[]> }
+  props: { params: Promise<{ id: string }> }
 ) {
   console.log(`[${request.method}] ${request.url}`);
   try {
+    const { id } = await props.params;
     const body = await request.json();
-    const existingNote = await Note.get(params.id as string);
+    const existingNote = await Note.get(id);
     
     if (!existingNote) {
       return NextResponse.json(
@@ -63,7 +75,7 @@ export async function PUT(
       updated_at: new Date().toISOString(),
     };
     
-    await Note.update({ id: params.id as string }, updatedNote);
+    await Note.update({ id }, updatedNote);
     return NextResponse.json(updatedNote);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
@@ -77,11 +89,12 @@ export async function PUT(
 // DELETE /api/notes/[id] - Delete a note
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Record<string, string | string[]> }
+  props: { params: Promise<{ id: string }> }
 ) {
   console.log(`[${request.method}] ${request.url}`);
   try {
-    const note = await Note.get(params.id as string);
+    const { id } = await props.params;
+    const note = await Note.get(id);
     if (!note) {
       return NextResponse.json(
         { error: 'Note not found' },
@@ -89,7 +102,7 @@ export async function DELETE(
       );
     }
     
-    await Note.delete(params.id as string);
+    await Note.delete(id);
     return NextResponse.json({ success: true });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
