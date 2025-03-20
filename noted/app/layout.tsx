@@ -5,6 +5,9 @@ import "98.css/dist/98.css"
 export const metadata: Metadata = {
   title: "Noted 98 ",
   description: "Generate notes in classic windows 98",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
