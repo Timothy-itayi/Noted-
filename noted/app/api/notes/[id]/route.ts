@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import * as dynamoose from 'dynamoose';
 
 // Define the Note schema
@@ -29,7 +29,7 @@ export async function GET(
       );
     }
     return NextResponse.json(note);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch note' },
       { status: 500 }
@@ -61,7 +61,7 @@ export async function PUT(
     
     await Note.update({ id: params.id }, updatedNote);
     return NextResponse.json(updatedNote);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to update note' },
       { status: 500 }
@@ -85,7 +85,7 @@ export async function DELETE(
     
     await Note.delete(params.id);
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to delete note' },
       { status: 500 }

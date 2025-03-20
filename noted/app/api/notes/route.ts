@@ -32,7 +32,7 @@ export async function GET() {
   try {
     const notes = await Note.scan().exec();
     return NextResponse.json(notes);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch notes' },
       { status: 500 }
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     
     await Note.create(note);
     return NextResponse.json(note);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to create note' },
       { status: 500 }
