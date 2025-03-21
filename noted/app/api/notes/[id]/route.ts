@@ -94,29 +94,39 @@ export async function DELETE(
     }
 
     console.log('Attempting to delete note with ID:', id);
+    console.log('Python API URL:', process.env.PYTHON_API_URL);
     
-    const response = await fetch(`${process.env.PYTHON_API_URL}/notes/${id}`, {
+    const pythonApiUrl = `${process.env.PYTHON_API_URL}/notes/${id}`;
+    console.log('Full Python API URL:', pythonApiUrl);
+    
+    const response = await fetch(pythonApiUrl, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
+    console.log('Python API response status:', response.status);
+    console.log('Python API response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       console.error('Python API delete failed:', response.status);
+      console.error('Python API error data:', errorData);
       return NextResponse.json(
-        { error: 'Failed to delete note' },
+        { error: 'Failed to delete note', details: errorData },
         { status: response.status }
       );
     }
 
+    const responseData = await response.json();
+    console.log('Python API response data:', responseData);
     console.log('Note deleted successfully');
-    return NextResponse.json({ success: true });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error in DELETE handler:', error);
     return NextResponse.json(
-      { error: 'Failed to delete note' },
+      { error: 'Failed to delete note', details: error.message },
       { status: 500 }
     );
   }
