@@ -113,14 +113,9 @@ export function useNotes() {
           // Log each note before filtering
           console.log('Notes before filtering:', data);
           
-          // Only filter out completely invalid notes and normalize the ID field
+          // Only filter out completely invalid notes
           const validNotes = data.filter(note => {
-            const isValid = note && typeof note === 'object';
-            if (isValid) {
-              // Normalize the ID field by removing the space
-              note.id = note['id'] || note.id;
-              delete note['id'];
-            }
+            const isValid = note && typeof note === 'object' && note.id;
             console.log('Note validation:', note, isValid);
             return isValid;
           });
