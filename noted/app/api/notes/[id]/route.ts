@@ -118,10 +118,17 @@ export async function DELETE(
       );
     }
     
-    // Delete the note using the correct Dynamoose method
+    // Delete the note using batchDelete
     console.log('Deleting note...');
     try {
-      await Note.delete(id);  // Pass ID directly
+      const response = await Note.batchDelete([{ id }]);
+      console.log('Delete response:', response);
+      
+      if (response.unprocessedItems && response.unprocessedItems.length > 0) {
+        console.error('Some items were not processed:', response.unprocessedItems);
+        throw new Error('Failed to delete note');
+      }
+      
       console.log('Note deleted successfully');
     } catch (deleteError) {
       console.error('Error during delete operation:', deleteError);
