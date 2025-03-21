@@ -1,10 +1,20 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from . import crud  
 
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 
 class NoteRequest(BaseModel):
@@ -15,8 +25,7 @@ class NoteRequest(BaseModel):
 
 class NoteResponse(NoteRequest):
  
-   title: str
-   body: str
+   id: str
    created_at: str
 
 # Root endpoint
@@ -24,7 +33,7 @@ class NoteResponse(NoteRequest):
 def read_root():
     try:
         notes = crud.get_all_notes()
-        return {"message": "Notes of notes", "notes": notes}
+        return {"message": "Notes API", "notes": notes}
     except HTTPException as e:
         raise e
 
@@ -67,10 +76,10 @@ async def update_note(note_id: str, note: NoteRequest):
         raise e
 
 # Delete a note
-@app.delete("/notes/{note_id}", response_model=dict)
+@app.delete("/notes/{note_id}")
 async def delete_note(note_id: str):
     try:
         response = crud.delete_note(note_id)
-        return {"message": "Note deleted successfully"}
+        return {"message": "Note deleted successfully", "deleted_note": response.get('deleted_note')}
     except HTTPException as e:
         raise e

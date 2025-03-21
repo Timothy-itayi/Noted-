@@ -68,8 +68,12 @@ export function useNotes() {
       const cleanId = id.trim();
       console.log('Attempting to delete note with ID:', cleanId);
       console.log('Current notes before delete:', notes);
+      console.log('Python API URL:', process.env.PYTHON_API_URL);
       
-      const response = await fetch(`/api/notes/${cleanId}`, {
+      const deleteUrl = `/api/notes/${cleanId}`;
+      console.log('Delete URL:', deleteUrl);
+      
+      const response = await fetch(deleteUrl, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -77,14 +81,19 @@ export function useNotes() {
       });
       
       console.log('Delete response status:', response.status);
+      console.log('Delete response headers:', Object.fromEntries(response.headers.entries()));
       
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('Delete response data:', responseData);
         console.log('Delete successful, updating notes state');
         const updatedNotes = notes.filter(note => note.id !== cleanId);
         console.log('Updated notes after delete:', updatedNotes);
         setNotes(updatedNotes);
       } else {
+        const errorData = await response.json().catch(() => ({}));
         console.error('Delete failed with status:', response.status);
+        console.error('Delete error data:', errorData);
         // Try to fetch fresh data if delete failed
         await fetchNotes();
       }
