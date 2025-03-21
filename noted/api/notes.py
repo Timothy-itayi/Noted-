@@ -46,4 +46,30 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(note).encode())
         except Exception as e:
+            self.send_error(500, str(e))
+
+    def do_DELETE(self):
+        try:
+            # Extract note ID from the path
+            path = self.path
+            note_id = path.split('/')[-1]
+            
+            if not note_id:
+                self.send_error(400, "Note ID is required")
+                return
+
+            # First check if the note exists
+            response = table.get_item(Key={'id': note_id})
+            if 'Item' not in response:
+                self.send_error(404, "Note not found")
+                return
+
+            # Delete the note
+            table.delete_item(Key={'id': note_id})
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"message": "Note deleted successfully"}).encode())
+        except Exception as e:
             self.send_error(500, str(e)) 

@@ -71,6 +71,9 @@ export function useNotes() {
       
       const response = await fetch(`/api/notes/${cleanId}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
       console.log('Delete response status:', response.status);
