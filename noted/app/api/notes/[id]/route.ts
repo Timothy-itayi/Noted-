@@ -120,8 +120,13 @@ export async function DELETE(
     
     // Delete the note using the correct Dynamoose method
     console.log('Deleting note...');
-    await Note.delete({ id: id.trim() });  // Ensure ID is trimmed
-    console.log('Note deleted successfully');
+    try {
+      await Note.delete(id);  // Pass ID directly
+      console.log('Note deleted successfully');
+    } catch (deleteError) {
+      console.error('Error during delete operation:', deleteError);
+      throw deleteError;  // Re-throw to be caught by outer catch
+    }
     
     return NextResponse.json({ success: true });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
