@@ -14,10 +14,26 @@ functions:
     handler: main.handler
     events:
       - http:
-          path: /{proxy+}
-          method: ANY
+          path: /notes/{note_id}
+          method: DELETE
+          cors: true
+      - http:
+          path: /notes/{note_id}
+          method: PUT
+          cors: true
+      - http:
+          path: /notes/{note_id}
+          method: GET
+          cors: true
+      - http:
+          path: /notes
+          method: POST
+          cors: true
+      - http:
+          path: /notes
+          method: GET
           cors: true
       - http:
           path: /
-          method: ANY
+          method: GET
           cors: true 

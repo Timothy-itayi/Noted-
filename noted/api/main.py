@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from . import crud  
+import json
 
 
 app = FastAPI()
@@ -83,3 +84,48 @@ async def delete_note(note_id: str):
         return {"message": "Note deleted successfully", "deleted_note": response.get('deleted_note')}
     except HTTPException as e:
         raise e
+
+# Serverless handler
+def handler(event, context):
+    """Handle AWS Lambda events"""
+    print(f"Received event: {json.dumps(event)}")
+    
+    # Extract HTTP method and path
+    http_method = event.get('httpMethod', '')
+    path = event.get('path', '')
+    
+    # Handle different HTTP methods
+    if http_method == 'DELETE' and path.startswith('/notes/'):
+        note_id = path.split('/')[-1]
+        try:
+            response = crud.delete_note(note_id)
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'message': 'Note deleted successfully',
+                    'deleted_note': response.get('deleted_note')
+                })
+            }
+        except HTTPException as e:
+            return {
+                'statusCode': e.status_code,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': str(e.detail)})
+            }
+    
+    # Add handlers for other methods as needed
+    return {
+        'statusCode': 404,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps({'error': 'Not found'})
+    }
