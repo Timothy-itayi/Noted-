@@ -1,49 +1,35 @@
 import { NextResponse } from 'next/server';
-import * as dynamoose from 'dynamoose';
 import { NextRequest } from 'next/server';
-
-// Define the Note schema
-const NoteSchema = new dynamoose.Schema({
-  id: {
-    type: String,
-    hashKey: true,
-  },
-  title: String,
-  body: String,
-  created_at: String,
-  updated_at: String,
-});
-
-const Note = dynamoose.model('Note', NoteSchema);
 
 // GET /api/notes/[id] - Get a specific note
 export async function GET(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
 ) {
-  // Log the request details
   console.log(`[${request.method}] ${request.url}`);
-  
   try {
-    // Get params from Promise
     const { id } = await props.params;
     
-    // Get note by ID from DynamoDB
-    const note = await Note.get(id);
-    
-    // Check if note exists
-    if (!note) {
+    const response = await fetch(`${process.env.PYTHON_API_URL}/notes/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Python API fetch failed:', response.status);
       return NextResponse.json(
-        { error: 'Note not found' },
-        { status: 404 }
+        { error: 'Failed to fetch note' },
+        { status: response.status }
       );
     }
-    
-    // Return the note if found
+
+    const note = await response.json();
     return NextResponse.json(note);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    // Handle any errors
+    console.error('Error fetching note:', error);
     return NextResponse.json(
       { error: 'Failed to fetch note' },
       { status: 500 }
@@ -60,25 +46,28 @@ export async function PUT(
   try {
     const { id } = await props.params;
     const body = await request.json();
-    const existingNote = await Note.get(id);
     
-    if (!existingNote) {
+    const response = await fetch(`${process.env.PYTHON_API_URL}/notes/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      console.error('Python API update failed:', response.status);
       return NextResponse.json(
-        { error: 'Note not found' },
-        { status: 404 }
+        { error: 'Failed to update note' },
+        { status: response.status }
       );
     }
 
-    const updatedNote = {
-      ...existingNote,
-      ...body,
-      updated_at: new Date().toISOString(),
-    };
-    
-    await Note.update({ id }, updatedNote);
-    return NextResponse.json(updatedNote);
+    const note = await response.json();
+    return NextResponse.json(note);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
+    console.error('Error updating note:', error);
     return NextResponse.json(
       { error: 'Failed to update note' },
       { status: 500 }
@@ -106,35 +95,22 @@ export async function DELETE(
 
     console.log('Attempting to delete note with ID:', id);
     
-    // First check if the note exists
-    const note = await Note.get(id);
-    console.log('Found note:', note);
-    
-    if (!note) {
-      console.log('Note not found, returning 404');
+    const response = await fetch(`${process.env.PYTHON_API_URL}/notes/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Python API delete failed:', response.status);
       return NextResponse.json(
-        { error: 'Note not found' },
-        { status: 404 }
+        { error: 'Failed to delete note' },
+        { status: response.status }
       );
     }
-    
-    // Delete the note using batchDelete
-    console.log('Deleting note...');
-    try {
-      const response = await Note.batchDelete([{ id }]);
-      console.log('Delete response:', response);
-      
-      if (response.unprocessedItems && response.unprocessedItems.length > 0) {
-        console.error('Some items were not processed:', response.unprocessedItems);
-        throw new Error('Failed to delete note');
-      }
-      
-      console.log('Note deleted successfully');
-    } catch (deleteError) {
-      console.error('Error during delete operation:', deleteError);
-      throw deleteError;  // Re-throw to be caught by outer catch
-    }
-    
+
+    console.log('Note deleted successfully');
     return NextResponse.json({ success: true });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {

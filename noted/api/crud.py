@@ -133,7 +133,37 @@ def update_note(note_id: str, note: Note):
 
 def delete_note(note_id: str):
     try:
-        response = table.delete_item(Key={'id': note_id})
-        return response
+        # Validate note_id
+        if not note_id or not isinstance(note_id, str):
+            raise HTTPException(status_code=400, detail="Invalid note ID")
+        
+        # First check if the note exists
+        existing_note = get_note(note_id)
+        if not existing_note:
+            raise HTTPException(status_code=404, detail="Note not found")
+        
+        print(f"Attempting to delete note with ID: {note_id}")  # Debug log
+        
+        # Delete the note
+        response = table.delete_item(
+            Key={'id': note_id},
+            ReturnValues="ALL_OLD"  # Return the deleted item
+        )
+        
+        print(f"Delete response: {response}")  # Debug log
+        
+        # Check if the deletion was successful
+        if 'Attributes' not in response:
+            raise HTTPException(status_code=500, detail="Failed to delete note")
+            
+        return {"message": "Note deleted successfully", "deleted_note": response['Attributes']}
+        
     except ClientError as e:
-        raise HTTPException(status_code=500, detail=f"Error deleting note: {e}")
+        error_code = e.response['Error']['Code']
+        print(f"DynamoDB error: {error_code} - {str(e)}")  # Debug log
+        raise HTTPException(status_code=500, detail=f"Error deleting note: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Unexpected error in delete_note: {str(e)}")  # Debug log
+        raise HTTPException(status_code=500, detail=f"Unexpected error deleting note: {str(e)}")
