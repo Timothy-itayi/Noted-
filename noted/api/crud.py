@@ -115,21 +115,21 @@ def get_all_notes() -> List[Note]:
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving notes: {e}")
 
-def update_note(note_id: str, note: Note):
+def update_note(note_id: str, note_data: dict):
     try:
         response = table.update_item(
             Key={'id': note_id},
-            UpdateExpression="set title = :t, body = :b",
+            UpdateExpression="set title = :t, body = :b, updated_at = :u",
             ExpressionAttributeValues={
-                ':t': note.title,
-                ':b': note.body,
+                ':t': note_data['title'],
+                ':b': note_data['body'],
+                ':u': datetime.utcnow().isoformat()
             },
-            ReturnValues="UPDATED_NEW"
+            ReturnValues="ALL_NEW"
         )
         return response
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error updating note: {e}")
-
 
 def delete_note(note_id: str):
     try:

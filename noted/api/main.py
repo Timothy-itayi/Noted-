@@ -46,30 +46,31 @@ async def create_note(note: NoteRequest):
         return note_data
     except HTTPException as e:
         raise e
-# Get a specific note by title
-@app.get("/notes/{title}", response_model=NoteResponse)
-async def get_note(title: str):
-    note = crud.get_note(title)
+
+# Get a specific note by ID
+@app.get("/notes/{note_id}", response_model=NoteResponse)
+async def get_note(note_id: str):
+    note = crud.get_note(note_id)
     if note:
         return note
     else:
         raise HTTPException(status_code=404, detail="Note not found")
 
 # Update a note
-@app.put("/notes/{title}", response_model=NoteResponse)
-async def update_note(title: str, note: NoteRequest):
+@app.put("/notes/{note_id}", response_model=NoteResponse)
+async def update_note(note_id: str, note: NoteRequest):
     try:
         note_data = note.dict()
-        response = crud.update_note(title, note_data)
+        response = crud.update_note(note_id, note_data)
         return response['Attributes']  
     except HTTPException as e:
         raise e
 
 # Delete a note
-@app.delete("/notes/{title}", response_model=dict)
-async def delete_note(title: str):
+@app.delete("/notes/{note_id}", response_model=dict)
+async def delete_note(note_id: str):
     try:
-        response = crud.delete_note(title)
+        response = crud.delete_note(note_id)
         return {"message": "Note deleted successfully"}
     except HTTPException as e:
         raise e
