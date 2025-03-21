@@ -27,11 +27,11 @@ export async function GET(
 
     const note = await response.json();
     return NextResponse.json(note);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching note:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: 'Failed to fetch note' },
+      { error: 'Failed to fetch note', details: errorMessage },
       { status: 500 }
     );
   }
@@ -65,11 +65,11 @@ export async function PUT(
 
     const note = await response.json();
     return NextResponse.json(note);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error updating note:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: 'Failed to update note' },
+      { error: 'Failed to update note', details: errorMessage },
       { status: 500 }
     );
   }
@@ -123,10 +123,11 @@ export async function DELETE(
     console.log('Python API response data:', responseData);
     console.log('Note deleted successfully');
     return NextResponse.json(responseData);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in DELETE handler:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: 'Failed to delete note', details: error.message },
+      { error: 'Failed to delete note', details: errorMessage },
       { status: 500 }
     );
   }
