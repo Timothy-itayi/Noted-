@@ -64,10 +64,12 @@ export function useNotes() {
         return;
       }
 
-      console.log('Attempting to delete note with ID:', id);
+      // Ensure ID is properly formatted
+      const cleanId = id.trim();
+      console.log('Attempting to delete note with ID:', cleanId);
       console.log('Current notes before delete:', notes);
       
-      const response = await fetch(`/api/notes/${id}`, {
+      const response = await fetch(`/api/notes/${cleanId}`, {
         method: 'DELETE',
       });
       
@@ -75,7 +77,7 @@ export function useNotes() {
       
       if (response.ok) {
         console.log('Delete successful, updating notes state');
-        const updatedNotes = notes.filter(note => note.id !== id);
+        const updatedNotes = notes.filter(note => note.id !== cleanId);
         console.log('Updated notes after delete:', updatedNotes);
         setNotes(updatedNotes);
       } else {
@@ -116,8 +118,8 @@ export function useNotes() {
             const isValid = note && typeof note === 'object';
             if (isValid) {
               // Normalize the ID field by removing the space
-              note.id = note['id '] || note.id;
-              delete note['id '];
+              note.id = note['id'] || note.id;
+              delete note['id'];
             }
             console.log('Note validation:', note, isValid);
             return isValid;

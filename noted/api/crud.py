@@ -9,7 +9,7 @@ import random
 
 # Initialize DynamoDB resource
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-2') 
-table = dynamodb.Table('Notes')
+table = dynamodb.Table('Notes_Table')
 
 # Custom epoch (you can adjust this)
 CUSTOM_EPOCH = 1709251200000  
@@ -46,7 +46,7 @@ def create_note(note: Note):
         
         # Create the item with all required fields
         item = {
-            'id ': note_id,  # This is the partition key
+            'id': note_id,  # This is the partition key
             'title': note.title,  # Remove any extra whitespace
             'body': note.body,    
             'created_at': created_at
@@ -59,7 +59,7 @@ def create_note(note: Note):
             raise HTTPException(status_code=400, detail="Title and body cannot be empty")
         
         # Ensure id is present and not empty
-        if not item['id ']:
+        if not item['id']:
             raise HTTPException(status_code=500, detail="Failed to generate note ID")
         
         # Insert the note into DynamoDB
@@ -75,7 +75,7 @@ def create_note(note: Note):
         
         # Return the created item
         return {
-            'id ': item['id '],
+            'id': item['id'],
             'title': item['title'],
             'body': item['body'],
             'created_at': item['created_at']
@@ -88,7 +88,7 @@ def create_note(note: Note):
 
 def get_note(note_id: str) -> Optional[Note]:
     try:
-        response = table.get_item(Key={'id ': note_id})
+        response = table.get_item(Key={'id': note_id})
         if 'Item' in response:
             return Note(**response['Item'])
         else:
@@ -105,7 +105,7 @@ def get_all_notes() -> List[Note]:
         for item in items:
            
             note_data = {
-                'id': item.get('id ', ''),
+                'id': item.get('id', ''),
                 'title': item.get('title', ''),
                 'body': item.get('body', ''),
                 'created_at': item.get('created_at', '')
@@ -118,7 +118,7 @@ def get_all_notes() -> List[Note]:
 def update_note(note_id: str, note: Note):
     try:
         response = table.update_item(
-            Key={'id ': note_id},
+            Key={'id': note_id},
             UpdateExpression="set title = :t, body = :b",
             ExpressionAttributeValues={
                 ':t': note.title,
@@ -133,7 +133,7 @@ def update_note(note_id: str, note: Note):
 
 def delete_note(note_id: str):
     try:
-        response = table.delete_item(Key={'id ': note_id})
+        response = table.delete_item(Key={'id': note_id})
         return response
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error deleting note: {e}")

@@ -120,7 +120,7 @@ export async function DELETE(
     
     // Delete the note using the correct Dynamoose method
     console.log('Deleting note...');
-    await Note.delete({ id : id });  // Pass id as an object with the key name
+    await Note.delete({ id: id.trim() });  // Ensure ID is trimmed
     console.log('Note deleted successfully');
     
     return NextResponse.json({ success: true });

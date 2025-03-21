@@ -11,7 +11,7 @@ dynamodb = boto3.resource('dynamodb',
     aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
     aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
 )
-table = dynamodb.Table('Notes')
+table = dynamodb.Table('Notes_Table')
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -32,7 +32,7 @@ class handler(BaseHTTPRequestHandler):
             body = json.loads(post_data.decode('utf-8'))
             
             note = {
-                'id ': str(uuid.uuid4()),
+                'id': str(uuid.uuid4()),
                 'title': body['title'],
                 'body': body['body'],
                 'created_at': datetime.utcnow().isoformat(),
