@@ -19,90 +19,68 @@ export function useNotes() {
     
     try {
       if (isEditing && currentNote?.id) {
-        // Update note
-        const response = await fetch(`/api/notes/${currentNote.id}`, {
+        //  Update note
+        const response = await fetch('/api/notes', { //  No ID in URL
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ title, body }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: currentNote.id, title, body }), //  Send ID in body
         });
-        
+  
         if (response.ok) {
-          await fetchNotes(); // Fetch fresh data after update
+          await fetchNotes(); //  Refresh list
           setIsEditing(false);
           setCurrentNote(null);
           setTitle('');
           setBody('');
+        } else {
+          console.error('Update failed:', await response.json());
         }
       } else {
-        // Create new note
+        //  Create new note
         const response = await fetch('/api/notes', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title, body }),
         });
-
+  
         if (response.ok) {
-          await fetchNotes(); // Fetch fresh data after create
+          await fetchNotes(); // ✅ Refresh list
           setTitle('');
           setBody('');
+        } else {
+          console.error('Create failed:', await response.json());
         }
       }
     } catch (error) {
       console.error('Error saving note:', error);
     }
   };
+  
 
   const handleDelete = async (id: string) => {
     try {
-      // Validate ID before making the request
       if (!id) {
         console.error('Cannot delete note: Invalid ID');
         return;
       }
-
-      // Ensure ID is properly formatted
-      const cleanId = id.trim();
-      console.log('Attempting to delete note with ID:', cleanId);
-      console.log('Current notes before delete:', notes);
-      console.log('Python API URL:', process.env.PYTHON_API_URL);
-      
-      const deleteUrl = `/api/notes/${cleanId}`;
-      console.log('Delete URL:', deleteUrl);
-      
-      const response = await fetch(deleteUrl, {
+  
+      const response = await fetch('/api/notes', {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }), //  Send ID in body
       });
-      
-      console.log('Delete response status:', response.status);
-      console.log('Delete response headers:', Object.fromEntries(response.headers.entries()));
-      
+  
       if (response.ok) {
-        const responseData = await response.json();
-        console.log('Delete response data:', responseData);
-        console.log('Delete successful, updating notes state');
-        const updatedNotes = notes.filter(note => note.id !== cleanId);
-        console.log('Updated notes after delete:', updatedNotes);
-        setNotes(updatedNotes);
+        console.log('Delete successful');
+        setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Delete failed with status:', response.status);
-        console.error('Delete error data:', errorData);
-        // Try to fetch fresh data if delete failed
-        await fetchNotes();
+        console.error('Delete failed:', await response.json());
       }
     } catch (error) {
       console.error('Error deleting note:', error);
-      // Try to fetch fresh data if delete failed
-      await fetchNotes();
     }
   };
+  
 
   const handleEdit = (note: Note) => {
     setIsEditing(true);
