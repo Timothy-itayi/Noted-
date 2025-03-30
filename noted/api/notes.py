@@ -16,11 +16,15 @@ table = dynamodb.Table('Notes_Table')
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            # Extract note ID from the path (if available)
-            path = self.path
-            note_id = path.split('/')[-1]  # Get the last part of the path
-
-            if note_id and note_id != '':  # If a note_id is provided, fetch that specific note
+            # Extract the base path and check for the note ID
+            path = self.path.strip('/')
+            path_parts = path.split('/')
+            
+            # If there's a note_id, the path will contain only one element (e.g. 'notes/{id}')
+            if len(path_parts) == 2 and path_parts[0] == 'notes':
+                note_id = path_parts[1]
+                
+                # Get specific note by ID
                 response = table.get_item(Key={'id': note_id})
                 
                 if 'Item' not in response:
@@ -33,15 +37,16 @@ class handler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(note).encode())
-            else:
-                # If no note_id is provided, return all notes
+            elif len(path_parts) == 1 and path_parts[0] == 'notes':
+                # If no ID is provided, return all notes
                 response = table.scan()
                 items = response.get('Items', [])
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(items).encode())
-
+            else:
+                self.send_error(404, "Invalid endpoint")
         except Exception as e:
             self.send_error(500, str(e))
 
@@ -71,12 +76,15 @@ class handler(BaseHTTPRequestHandler):
     def do_DELETE(self):
         try:
             # Extract note ID from the path
-            path = self.path
-            note_id = path.split('/')[-1]
+            path = self.path.strip('/')
+            path_parts = path.split('/')
             
-            if not note_id:
+            # If there's no note_id, respond with an error
+            if len(path_parts) != 2 or path_parts[0] != 'notes':
                 self.send_error(400, "Note ID is required")
                 return
+
+            note_id = path_parts[1]
 
             # Check if the note exists
             response = table.get_item(Key={'id': note_id})
