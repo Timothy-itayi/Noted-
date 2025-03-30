@@ -90,10 +90,13 @@ def get_note(note_id: str) -> Optional[Note]:
     try:
         response = table.get_item(Key={'id': note_id})
         if 'Item' in response:
+            print(f"Note found: {response['Item']}")  # Debug log
             return Note(**response['Item'])
         else:
+            print(f"No note found with ID: {note_id}")  # Debug log
             return None
     except ClientError as e:
+        print(f"Error retrieving note: {e}")  # Debug log
         raise HTTPException(status_code=500, detail=f"Error retrieving note: {e}")
 
 def get_all_notes() -> List[Note]:
@@ -131,7 +134,7 @@ def update_note(note_id: str, note_data: dict):
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error updating note: {e}")
     
-    
+
 def delete_note(note_id: str):
     try:
         # Validate note_id
