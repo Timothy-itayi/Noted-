@@ -43,17 +43,16 @@ export async function GET(
 
 // Send id in the request body instead of appending url 
 // DELETE /api/notes/[id] - Delete a note
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } } // Extract `id` from URL params
-) {
-  console.log(`[${request.method}] ${request.url}`);
-  try {
-    const { id } = params;  // Get the ID from the URL params
-    if (!id) {
-      return NextResponse.json({ error: 'Missing note ID' }, { status: 400 });
-    }
 
+export async function DELETE(request: NextRequest) {
+  const { pathname } = new URL(request.url);
+  const id = pathname.split('/').pop(); // Extract the id from the URL path
+
+  if (!id) {
+    return NextResponse.json({ error: 'Invalid ID provided for delete' }, { status: 400 });
+  }
+
+  try {
     const response = await fetch(`${process.env.PYTHON_API_URL}/notes/${id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -69,7 +68,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error failed  deleting note:', error);
+    console.error('Error failed deleting note:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -77,35 +76,33 @@ export async function DELETE(
   }
 }
 
-
 //same as delete essentially but we update the data base with the updated notes 
 // PUT /api/notes/[id] - Update a note
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } } // Get the 'id' from the route params
-) {
+
+
+export async function PUT(request: NextRequest) {
+  const { pathname } = new URL(request.url);
+  const id = pathname.split('/').pop(); // Extract the id from the URL path
+
+  if (!id) {
+    return NextResponse.json({ error: 'Invalid ID provided for update' }, { status: 400 });
+  }
+
   console.log(`[${request.method}] ${request.url}`);
+  console.log('Attempting to update note with ID:', id);
 
   try {
-    const { id } = params; // Extract 'id' from the URL params
-    const updateData = await request.json(); // Get the rest of the note data from the request body
+    const updateData = await request.json(); // Get the note data to update from the body
 
-    if (!id) {
-      console.error('Invalid ID provided for update');
-      return NextResponse.json({ error: 'Invalid note ID' }, { status: 400 });
-    }
-
-    console.log('Attempting to update note with ID:', id);
     console.log('Python API URL:', process.env.PYTHON_API_URL);
-
     const pythonApiUrl = `${process.env.PYTHON_API_URL}/notes/${id}`;
     console.log('Full Python API URL:', pythonApiUrl);
 
-    // Send the PUT request to the Python API with the updated note data
+    // Send PUT request to the Python API with the updated note data
     const response = await fetch(pythonApiUrl, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updateData), // Send the updated note data
+      body: JSON.stringify(updateData), // Send the updated data
     });
 
     if (!response.ok) {
@@ -119,8 +116,9 @@ export async function PUT(
 
     const updatedNote = await response.json();
     console.log('Note updated successfully:', updatedNote);
-    return NextResponse.json(updatedNote); // Return the updated note as JSON
-  } catch (error: unknown) {
+    return NextResponse.json(updatedNote); // Return the updated note
+
+  } catch (error) {
     console.error('Error in PUT handler:', error);
     return NextResponse.json({ error: 'Failed to update note' }, { status: 500 });
   }
