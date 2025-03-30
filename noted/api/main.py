@@ -63,7 +63,7 @@ async def create_note(note: NoteRequest):
 async def get_note(note_id: str):
     try:
         # Fetch the note from the database using the ID
-        note = crud.get_note_by_id(note_id)
+        note = crud.get_note(note_id)
         if not note:
             raise HTTPException(status_code=404, detail="Note not found")
         return note
