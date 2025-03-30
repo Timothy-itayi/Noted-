@@ -20,11 +20,12 @@ export function useNotes() {
     try {
       if (isEditing && currentNote?.id) {
         //  Update note
-        const response = await fetch('/api/notes', { //  No ID in URL
+        const response = await fetch(`/api/notes/${currentNote.id}`, { 
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: currentNote.id, title, body }), //  Send ID in body
+          body: JSON.stringify({ title, body }), 
         });
+        
   
         if (response.ok) {
           await fetchNotes(); //  Refresh list
@@ -44,7 +45,7 @@ export function useNotes() {
         });
   
         if (response.ok) {
-          await fetchNotes(); // ✅ Refresh list
+          await fetchNotes(); //  Refresh list
           setTitle('');
           setBody('');
         } else {
@@ -64,22 +65,24 @@ export function useNotes() {
         return;
       }
   
-      const response = await fetch('/api/notes', {
+      // Send the ID in the URL
+      const response = await fetch(`/api/notes/${id}`, {  
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }), //  Send ID in body
       });
   
+      const text = await response.text();
+  
       if (response.ok) {
-        console.log('Delete successful');
+        console.log('Delete successful:', text);
         setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
       } else {
-        console.error('Delete failed:', await response.json());
+        console.error('Delete failed:', text);
       }
     } catch (error) {
       console.error('Error deleting note:', error);
     }
   };
+  
   
 
   const handleEdit = (note: Note) => {
