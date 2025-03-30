@@ -18,33 +18,29 @@ class handler(BaseHTTPRequestHandler):
         try:
             # Extract the base path and check for the note ID
             path = self.path.strip('/')
-            path_parts = path.split('/')
+           
             
             # If there's a note_id, the path will contain only one element (e.g. 'notes/{id}')
-            if len(path_parts) == 2 and path_parts[0] == 'notes':
-                note_id = path_parts[1]
-                
-                # Get specific note by ID
-                response = table.get_item(Key={'id': note_id})
-                
-                if 'Item' not in response:
-                    self.send_error(404, "Note not found")
-                    return
-                
-                note = response['Item']
-                # Return the specific note in the response
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps(note).encode())
-            elif len(path_parts) == 1 and path_parts[0] == 'notes':
-                # If no ID is provided, return all notes
+            if path == 'api/notes':
                 response = table.scan()
                 items = response.get('Items', [])
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(items).encode())
+
+            elif path.startswith('api/notes/'):
+                note_id = path.split('/')[-1]
+                response = table.get_item(Key={'id': note_id})
+                if 'Item' not in response:
+                    self.send_error(404, "Note not found")
+                    return
+                note = response['Item']
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(note).encode())
+                
             else:
                 self.send_error(404, "Invalid endpoint")
         except Exception as e:
@@ -73,18 +69,18 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, str(e))
 
-    def do_DELETE(self):
-        try:
-            # Extract note ID from the path
-            path = self.path.strip('/')
-            path_parts = path.split('/')
-            
-            # If there's no note_id, respond with an error
-            if len(path_parts) != 2 or path_parts[0] != 'notes':
+def do_DELETE(self):
+    try:
+        # Get the path from the request
+        path = self.path.strip('/')
+
+        # If the path is for deleting a note, it should contain '/api/notes/{id}'
+        if path.startswith('api/notes/'):
+            note_id = path.split('/')[-1]  # Extract the note ID from the path
+
+            if not note_id:
                 self.send_error(400, "Note ID is required")
                 return
-
-            note_id = path_parts[1]
 
             # Check if the note exists
             response = table.get_item(Key={'id': note_id})
@@ -94,10 +90,15 @@ class handler(BaseHTTPRequestHandler):
 
             # Delete the note
             table.delete_item(Key={'id': note_id})
-            
+
+            # Send success response
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({"message": "Note deleted successfully"}).encode())
-        except Exception as e:
-            self.send_error(500, str(e))
+        
+        else:
+            self.send_error(404, "Invalid endpoint for deletion")
+
+    except Exception as e:
+        self.send_error(500, str(e))
