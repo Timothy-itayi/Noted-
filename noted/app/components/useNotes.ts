@@ -65,24 +65,23 @@ export function useNotes() {
         return;
       }
   
-      // Send the ID in the URL
-      const response = await fetch(`/api/notes/${id}`, {  
+      
+      const response = await fetch(`/api/notes/${id}`, {
         method: 'DELETE',
       });
   
-      const text = await response.text();
+      const data = await response.json(); 
   
       if (response.ok) {
-        console.log('Delete successful:', text);
-        setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+        console.log('Delete successful:', data);
+        setNotes(prevNotes => prevNotes.filter(note => note.id !== id)); // Update the UI
       } else {
-        console.error('Delete failed:', text);
+        console.error('Delete failed:', data.message || 'Unknown error');
       }
     } catch (error) {
       console.error('Error deleting note:', error);
     }
   };
-  
   
 
   const handleEdit = (note: Note) => {

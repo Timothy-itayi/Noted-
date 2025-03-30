@@ -57,14 +57,19 @@ async def create_note(note: NoteRequest):
     except HTTPException as e:
         raise e
 
-# Get a specific note by ID
+
+# GET /api/notes/{note_id} - Fetch a specific note by ID
 @app.get("/notes/{note_id}", response_model=NoteResponse)
 async def get_note(note_id: str):
-    note = crud.get_note(note_id)
-    if note:
+    try:
+        # Fetch the note from the database using the ID
+        note = crud.get_note(note_id)
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
         return note
-    else:
-        raise HTTPException(status_code=404, detail="Note not found")
+    except HTTPException as e:
+        raise e
+
 
 # Update a note
 @app.put("/notes/{note_id}", response_model=NoteResponse)
