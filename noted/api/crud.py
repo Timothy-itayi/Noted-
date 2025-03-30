@@ -130,21 +130,22 @@ def update_note(note_id: str, note_data: dict):
         return response
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error updating note: {e}")
-
+    
+    
 def delete_note(note_id: str):
     try:
         # Validate note_id
         if not note_id or not isinstance(note_id, str):
             raise HTTPException(status_code=400, detail="Invalid note ID")
         
-        # First check if the note exists
+        # First, check if the note exists
         existing_note = get_note(note_id)
         if not existing_note:
             raise HTTPException(status_code=404, detail="Note not found")
         
         print(f"Attempting to delete note with ID: {note_id}")  # Debug log
         
-        # Delete the note
+        # Delete the note from DynamoDB
         response = table.delete_item(
             Key={'id': note_id},
             ReturnValues="ALL_OLD"  # Return the deleted item
@@ -152,11 +153,12 @@ def delete_note(note_id: str):
         
         print(f"Delete response: {response}")  # Debug log
         
-        # Check if the deletion was successful
+        # Check if the deletion was successful (Attributes contains the deleted item)
         if 'Attributes' not in response:
             raise HTTPException(status_code=500, detail="Failed to delete note")
-            
-        return {"message": "Note deleted successfully", "deleted_note": response['Attributes']}
+        
+        deleted_note = response['Attributes']
+        return {"message": "Note deleted successfully", "deleted_note": deleted_note}
         
     except ClientError as e:
         error_code = e.response['Error']['Code']
