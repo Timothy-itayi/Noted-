@@ -16,12 +16,32 @@ table = dynamodb.Table('Notes_Table')
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            response = table.scan()
-            items = response.get('Items', [])
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(items).encode())
+            # Extract note ID from the path (if available)
+            path = self.path
+            note_id = path.split('/')[-1]  # Get the last part of the path
+
+            if note_id and note_id != '':  # If a note_id is provided, fetch that specific note
+                response = table.get_item(Key={'id': note_id})
+                
+                if 'Item' not in response:
+                    self.send_error(404, "Note not found")
+                    return
+                
+                note = response['Item']
+                # Return the specific note in the response
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(note).encode())
+            else:
+                # If no note_id is provided, return all notes
+                response = table.scan()
+                items = response.get('Items', [])
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(items).encode())
+
         except Exception as e:
             self.send_error(500, str(e))
 
@@ -58,7 +78,7 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error(400, "Note ID is required")
                 return
 
-            # First check if the note exists
+            # Check if the note exists
             response = table.get_item(Key={'id': note_id})
             if 'Item' not in response:
                 self.send_error(404, "Note not found")
@@ -72,4 +92,4 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"message": "Note deleted successfully"}).encode())
         except Exception as e:
-            self.send_error(500, str(e)) 
+            self.send_error(500, str(e))
