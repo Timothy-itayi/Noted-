@@ -40,54 +40,55 @@ export async function GET(
 
 
 
-// DELETE /api/notes/ - Delete a note
+
 // Send id in the request body instead of appending url 
-export async function DELETE(request: NextRequest) {
+// DELETE /api/notes/[id] - Delete a note
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } } // Extract `id` from URL params
+) {
   console.log(`[${request.method}] ${request.url}`);
-
   try {
-    
-    const { id } = await request.json();
-
+    const { id } = params;  // Get the ID from the URL params
     if (!id) {
-      console.error('Invalid ID provided for deletion');
-      return NextResponse.json({ error: 'Invalid note ID' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing note ID' }, { status: 400 });
     }
 
-    console.log('Attempting to delete note with ID:', id);
-    
-    const pythonApiUrl = `${process.env.PYTHON_API_URL}/notes/${id}`;
-    console.log('Full Python API URL:', pythonApiUrl);
-    
-    const response = await fetch(pythonApiUrl, {
+    const response = await fetch(`${process.env.PYTHON_API_URL}/notes/${id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
       console.error('Python API delete failed:', response.status);
-      return NextResponse.json({ error: 'Failed to delete note', details: errorData }, { status: response.status });
+      return NextResponse.json(
+        { error: 'Failed to delete note' },
+        { status: response.status }
+      );
     }
 
-    const responseData = await response.json();
-    console.log('Note deleted successfully');
-    return NextResponse.json(responseData);
-
-  } catch (error: unknown) {
-    console.error('Error in DELETE handler:', error);
-    return NextResponse.json({ error: 'Failed to delete note' }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error failed  deleting note:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
 
 //same as delete essentially but we update the data base with the updated notes 
-export async function PUT(request: NextRequest) {
+// PUT /api/notes/[id] - Update a note
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } } // Get the 'id' from the route params
+) {
   console.log(`[${request.method}] ${request.url}`);
 
   try {
-    //Extract data from request body
-    const { id, ...updateData } = await request.json();
+    const { id } = params; // Extract 'id' from the URL params
+    const updateData = await request.json(); // Get the rest of the note data from the request body
 
     if (!id) {
       console.error('Invalid ID provided for update');
@@ -96,14 +97,15 @@ export async function PUT(request: NextRequest) {
 
     console.log('Attempting to update note with ID:', id);
     console.log('Python API URL:', process.env.PYTHON_API_URL);
-    
+
     const pythonApiUrl = `${process.env.PYTHON_API_URL}/notes/${id}`;
     console.log('Full Python API URL:', pythonApiUrl);
 
+    // Send the PUT request to the Python API with the updated note data
     const response = await fetch(pythonApiUrl, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updateData), 
+      body: JSON.stringify(updateData), // Send the updated note data
     });
 
     if (!response.ok) {
@@ -117,8 +119,7 @@ export async function PUT(request: NextRequest) {
 
     const updatedNote = await response.json();
     console.log('Note updated successfully:', updatedNote);
-    return NextResponse.json(updatedNote);
-
+    return NextResponse.json(updatedNote); // Return the updated note as JSON
   } catch (error: unknown) {
     console.error('Error in PUT handler:', error);
     return NextResponse.json({ error: 'Failed to update note' }, { status: 500 });
