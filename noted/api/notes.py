@@ -1,8 +1,8 @@
-#notes.py
+#api/notes.py
 from http.server import BaseHTTPRequestHandler
 import json
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 
 import os
 
@@ -78,8 +78,8 @@ class handler(BaseHTTPRequestHandler):
                 'id': note_id,
                 'title': body['title'],
                 'body': body['body'],
-                'created_at': datetime.utcnow().isoformat(),
-                'updated_at': datetime.utcnow().isoformat()
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'updated_at': datetime.now(timezone.utc).isoformat()
             }
             
             table.put_item(Item=note)
