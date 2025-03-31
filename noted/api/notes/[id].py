@@ -78,7 +78,7 @@ class handler(BaseHTTPRequestHandler):
                 'title': body['title'],
                 'body': body['body'],
                 'created_at': datetime.now(timezone.utc).isoformat(),
-                'updated_at': datetime.now(timezone.utc).isoformat(),
+                'updated_at': datetime.now(timezone.utc).isoformat()
             }
             
             table.put_item(Item=note)
@@ -93,8 +93,10 @@ class handler(BaseHTTPRequestHandler):
     def do_DELETE(self):
         try:
             path = self.path.strip('/')
+            print("Received DELETE request for path:", path)  # Debugging
             if path.startswith('api/notes/'):
                 note_id = path.split('/')[-1]
+                print("Extracted note ID:", note_id)  # Debugging
                 if not note_id:
                     self.send_error(400, "Note ID is required")
                     return
