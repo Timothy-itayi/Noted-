@@ -5,14 +5,26 @@ from datetime import datetime
 
 import os
 
-from noted.api.crud import generate_note_id
+from crud import generate_note_id
 
 # Configure DynamoDB
 dynamodb = boto3.resource('dynamodb',
     region_name=os.environ.get('AWS_REGION'),
     aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
     aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
+    
+    
 )
+    # Validate AWS environment variables
+aws_region = os.environ.get('AWS_REGION')
+aws_access_key = os.environ.get('AWS_ACCESS_KEY_ID')
+aws_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+
+if not aws_region or not aws_access_key or not aws_secret_key:
+    print("WARNING: Missing AWS credentials environment variables")
+    print(f"AWS_REGION: {'SET' if aws_region else 'NOT SET'}")
+    print(f"AWS_ACCESS_KEY_ID: {'SET' if aws_access_key else 'NOT SET'}")
+    print(f"AWS_SECRET_ACCESS_KEY: {'SET' if aws_secret_key else 'NOT SET'}")
 table = dynamodb.Table('Notes_Table')
 
 class handler(BaseHTTPRequestHandler):
