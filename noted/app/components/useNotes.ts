@@ -80,7 +80,7 @@ export function useNotes() {
       }
     } catch (error) {
       console.error('Error deleting note:', error);
-      console.log("Type of ID:", typeof id);
+   
     }
   };
   
