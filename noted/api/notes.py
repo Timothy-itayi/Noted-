@@ -1,3 +1,4 @@
+#notes.py
 from http.server import BaseHTTPRequestHandler
 import json
 import boto3
@@ -5,7 +6,7 @@ from datetime import datetime
 
 import os
 
-from crud import generate_note_id
+from .crud import generate_note_id
 
 # Configure DynamoDB
 dynamodb = boto3.resource('dynamodb',
