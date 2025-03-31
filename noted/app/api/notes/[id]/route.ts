@@ -45,36 +45,45 @@ export async function GET(
 // DELETE /api/notes/[id] - Delete a note
 
 export async function DELETE(request: NextRequest) {
-  const { pathname } = new URL(request.url);
-  const id = pathname.split('/').pop(); // Extract the id from the URL path
-
-  if (!id) {
-    return NextResponse.json({ error: 'Invalid ID provided for delete' }, { status: 400 });
-  }
-
   try {
-    const response = await fetch(`${process.env.PYTHON_API_URL}/notes/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+    const { pathname } = new URL(request.url);
+    const id = pathname.split('/').pop();
+
+    console.log("Extracted ID for deletion:", id); // Debugging log
+
+    if (!id) {
+      console.error("Error: Invalid ID provided for delete.");
+      return NextResponse.json({ error: "Invalid ID provided for delete" }, { status: 400 });
+    }
+
+    const apiUrl = `${process.env.PYTHON_API_URL}/notes/${id}`;
+    console.log("Deleting note at:", apiUrl); // Log the full API URL
+
+    const response = await fetch(apiUrl, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
-      console.error('Python API delete failed:', response.status);
+      console.error("Python API delete failed:", response.status, await response.text());
       return NextResponse.json(
-        { error: 'Failed to delete note' },
+        { error: "Failed to delete note" },
         { status: response.status }
       );
     }
 
+    console.log("Note deleted successfully:", id);
     return NextResponse.json({ success: true });
+
   } catch (error) {
-    console.error('Error failed deleting note:', error);
+    console.error("Error deleting note:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
+
 
 //same as delete essentially but we update the data base with the updated notes 
 // PUT /api/notes/[id] - Update a note
