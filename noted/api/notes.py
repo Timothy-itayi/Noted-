@@ -93,8 +93,9 @@ class handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         try:
-            path = self.path.strip('/')
-            print("Received DELETE request for path:", path)  # Debugging
+            path = self.path.split('?')[0]
+            print("Received DELETE request for path:", path)
+            print(f"Full request path: {path}")  # Debugging
             if path.startswith('api/notes/'):
                 note_id = path.split('/')[-1]
                 print(f"Received ID for deletion: {note_id}, Type: {type(note_id)}")  # Debugging log
