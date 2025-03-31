@@ -50,7 +50,7 @@ export async function DELETE(request: NextRequest) {
     const id = pathname.split('/').pop()?.trim(); // Ensure ID is properly extracted
     
     console.log("Extracted ID for deletion:", id, "Type:", typeof id);
-    
+    console.log("Type of ID:", typeof id);
 
 
 
