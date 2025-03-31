@@ -3,7 +3,7 @@ from botocore.exceptions import ClientError
 from fastapi import HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime , timezone
 
 import uuid
 
@@ -27,98 +27,99 @@ class Note(BaseModel):
 
 def create_note(note: Note):
     try:
-        # Generate a new ID
+        # Generate a new unique ID for the note
         note_id = generate_note_id()
         print(f"Generated ID: {note_id}")  # Debug log
-        
-        created_at = datetime.now().isoformat()
-        
+
+        # Get the current timestamp for creation
+        created_at = datetime.now(timezone.utc).isoformat()
+
         # Create the item with all required fields
         item = {
-            'id': note_id,  # This is the partition key
-            'title': note.title,  # Remove any extra whitespace
-            'body': note.body,    
-            'created_at': created_at
+            'id': note_id,  # Partition key for DynamoDB
+            'title': note.title.strip(),  # Remove extra whitespace from title
+            'body': note.body.strip(),   # Remove extra whitespace from body
+            'created_at': created_at,
+            'updated_at': created_at  # Set updated_at to match created_at initially
         }
-        
+
         print(f"Item to be inserted: {item}")  # Debug log
-        
+
         # Validate that required fields are not empty
         if not item['title'] or not item['body']:
+            print("Validation failed: Title and body cannot be empty.")  # Debug log
             raise HTTPException(status_code=400, detail="Title and body cannot be empty")
-        
-        # Ensure id is present and not empty
+
+        # Ensure ID is present and valid (shouldn't happen, but extra safety)
         if not item['id']:
+            print("Validation failed: Failed to generate note ID.")  # Debug log
             raise HTTPException(status_code=500, detail="Failed to generate note ID")
-        
+
         # Insert the note into DynamoDB
         try:
-            print(f"Generated UUID: {note_id}")
-
-            response = table.put_item(
-                Item=item,
-           
-            )
+            response = table.put_item(Item=item)
             print(f"DynamoDB response: {response}")  # Debug log
+
+            # Check if the response indicates success (optional validation)
+            if response['ResponseMetadata']['HTTPStatusCode'] != 200:
+                print("DynamoDB put_item failed.")  # Debug log
+                raise HTTPException(status_code=500, detail="Failed to save note in database")
+        
         except ClientError as e:
             error_code = e.response['Error']['Code']
+            print(f"DynamoDB ClientError: {error_code} - {str(e)}")  # Debug log
+
             if error_code == 'ConditionalCheckFailedException':
                 raise HTTPException(status_code=409, detail="Note with this ID already exists")
+            
             raise HTTPException(status_code=500, detail=f"Error creating note: {str(e)}")
 
-        # Return the created item
+        # Return the created item as a response
         return {
             'id': item['id'],
             'title': item['title'],
             'body': item['body'],
-            'created_at': item['created_at']
+            'created_at': item['created_at'],
+            'updated_at': item['updated_at']
         }
-    except ClientError as e:
-        error_code = e.response['Error']['Code']
-        if error_code == 'ConditionalCheckFailedException':
-            raise HTTPException(status_code=409, detail="Note with this ID already exists")
-        raise HTTPException(status_code=500, detail=f"Error creating note: {str(e)}")
+    
+    except HTTPException as http_exc:
+        print(f"HTTPException: {http_exc.detail}")  # Debug log
+        raise http_exc
+
+    except Exception as e:
+        print(f"Unexpected error in create_note: {str(e)}")  # Debug log
+        raise HTTPException(status_code=500, detail=f"Unexpected error creating note: {str(e)}")
 
 def get_note(note_id: str) -> Optional[Note]:
+    if not note_id or not isinstance(note_id, str):
+        raise HTTPException(status_code=400, detail="Invalid note ID")
+
     try:
-        
         response = table.get_item(Key={'id': note_id})
         
         if 'Item' in response:
-            print(f"Note found: {response['Item']}") 
-  
             return Note(**response['Item'])
          
         else:
-            print(f"No note found with ID: {note_id}")  # Debug log
-            return None
+            raise HTTPException(status_code=404, detail=f"No note found with ID: {note_id}")
     except ClientError as e:
-        print(f"Error retrieving note: {e}")  # Debug log
         raise HTTPException(status_code=500, detail=f"Error retrieving note: {e}")
+
 
 def get_all_notes() -> List[Note]:
     try:
         response = table.scan()
         items = response.get('Items', [])
-
-          # If there are no items, log it and return an empty list
+        
         if not items:
             print("No notes found in the database.")
             return []
-        
 
-        notes = []
-        for item in items:
-           
-            note_data = {
-                'id': item.get('id', ''),
-                'title': item.get('title', ''),
-                'body': item.get('body', ''),
-                'created_at': item.get('created_at', '')
-            }
-            notes.append(Note(**note_data))
+        notes = [Note(**item) for item in items]
         return notes
     except ClientError as e:
+        print(f"Error retrieving notes: {e}")
         raise HTTPException(status_code=500, detail=f"Error retrieving notes: {e}")
 
 def update_note(note_id: str, note_data: dict):
@@ -129,7 +130,7 @@ def update_note(note_id: str, note_data: dict):
             ExpressionAttributeValues={
                 ':t': note_data['title'],
                 ':b': note_data['body'],
-                ':u': datetime.utcnow().isoformat()
+                ':u': datetime.now(timezone.utc).isoformat()
             },
             ReturnValues="ALL_NEW"
         )
