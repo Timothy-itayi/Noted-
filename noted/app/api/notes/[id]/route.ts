@@ -67,11 +67,12 @@ export async function DELETE(
       headers: { "Content-Type": "application/json" },
     });
 
-    const responseText = await response.text();
+  
     if (!response.ok) {
-      console.error("Python API delete failed:", response.status, responseText);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Python API delete failed:', response.status, errorData);
       return NextResponse.json(
-        { error: "Failed to delete note" },
+        { error: 'Failed to delete note', details: errorData },
         { status: response.status }
       );
     }
