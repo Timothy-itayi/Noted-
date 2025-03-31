@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 import time
+import uuid
 import random
 
 # Initialize DynamoDB resource
@@ -15,16 +16,18 @@ table = dynamodb.Table('Notes_Table')
 CUSTOM_EPOCH = 1709251200000  
 
 def generate_note_id():
-    """Generate a unique ID using timestamp and random number"""
+    """Generate a unique ID using timestamp, random number, and UUID"""
     # Get current timestamp in milliseconds
     ts = int(time.time() * 1000) - CUSTOM_EPOCH
     
     # Generate a random number between 0 and 999
     random_num = random.randint(0, 999)
     
-    # Combine timestamp and random number
-    # Format: timestamp (left-padded with zeros) + random number
-    note_id = f"{ts:013d}{random_num:03d}"
+    # Generate a short UUID (first 8 chars of UUID4)
+    short_uuid = str(uuid.uuid4())[:8]
+    
+    # Combine timestamp, random number, and short UUID
+    note_id = f"{ts:013d}{random_num:03d}-{short_uuid}"
     
     return note_id
 
