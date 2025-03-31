@@ -19,33 +19,39 @@ class handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            # Extract the base path and check for the note ID
             path = self.path.strip('/')
-           
+            
             if path == 'api/notes':
                 response = table.scan()
                 items = response.get('Items', [])
+                
+                # Return empty list if no items found
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(items).encode())
-
+            
             elif path.startswith('api/notes/'):
                 note_id = path.split('/')[-1]
                 response = table.get_item(Key={'id': note_id})
+                
                 if 'Item' not in response:
-                    self.send_error(404, "Note not found")
+                    self.send_error(404, json.dumps({"error": "Note not found"}))
                     return
+
                 note = response['Item']
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(note).encode())
-                
+            
             else:
-                self.send_error(404, "Invalid endpoint")
+                self.send_error(404, json.dumps({"error": "Invalid endpoint"}))
         except Exception as e:
-            self.send_error(500, str(e))
+            print(f"Error in do_GET: {str(e)}")
+            self.send_error(500, json.dumps({"error": str(e)}))
+
+
 
     def do_POST(self):
         try:

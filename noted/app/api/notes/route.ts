@@ -40,42 +40,33 @@ export async function GET(request: Request) {
 
 // POST /api/notes - Create a new note
 export async function POST(request: NextRequest) {
-  console.log(`[${request.method}] ${request.url}`);
+  console.log(`[${request.method}] Creating a new note`);
+
   try {
-    const body = await request.json();
+      const body = await request.json();
 
-    // Validate input before sending to the backend
-    if (!body.title || !body.body) {
-      console.error('Validation failed: Title and body are required.');
-      return NextResponse.json(
-        { error: 'Title and body are required' },
-        { status: 400 }
-      );
-    }
+      const response = await fetch(`${process.env.PYTHON_API_URL}/notes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+      });
 
-    const response = await fetch(`${process.env.PYTHON_API_URL}/notes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
+      if (!response.ok) {
+          console.error('Failed to create note:', response.status);
+          const errorData = await response.json().catch(() => null); // Handle empty response
+          return NextResponse.json(
+              { error: 'Failed to create note', details: errorData },
+              { status: response.status }
+          );
+      }
 
-    if (!response.ok) {
-      console.error('Python API create failed:', response.status);
-      return NextResponse.json(
-        { error: 'Failed to create note' },
-        { status: response.status }
-      );
-    }
-
-    const note = await response.json();
-    return NextResponse.json(note);
+      const note = await response.json();
+      return NextResponse.json(note);
   } catch (error) {
-    console.error('Error creating note:', error);
-    return NextResponse.json(
-      { error: 'Failed to create note' },
-      { status: 500 }
-    );
+      console.error('Error creating note:', error);
+      return NextResponse.json(
+          { error: 'Failed to create note' },
+          { status: 500 }
+      );
   }
 }
