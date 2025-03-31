@@ -2,8 +2,10 @@ from http.server import BaseHTTPRequestHandler
 import json
 import boto3
 from datetime import datetime
-import uuid
+
 import os
+
+from noted.api.crud import generate_note_id
 
 # Configure DynamoDB
 dynamodb = boto3.resource('dynamodb',
@@ -53,9 +55,11 @@ class handler(BaseHTTPRequestHandler):
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             body = json.loads(post_data.decode('utf-8'))
+
+            note_id = generate_note_id()
             
             note = {
-                'id': str(uuid.uuid4()),
+                'id': note_id,
                 'title': body['title'],
                 'body': body['body'],
                 'created_at': datetime.utcnow().isoformat(),
