@@ -16,18 +16,15 @@ dynamodb = boto3.resource('dynamodb',
 table = dynamodb.Table('Notes_Table')
 
 class handler(BaseHTTPRequestHandler):
+
     def do_GET(self):
         try:
             # Extract the base path and check for the note ID
             path = self.path.strip('/')
            
-            
-            # If there's a note_id, the path will contain only one element (e.g. 'notes/{id}')
             if path == 'api/notes':
                 response = table.scan()
                 items = response.get('Items', [])
-                print(f"All note IDs: {[item['id'] for item in response.get('Items', [])]}")
-          
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -77,27 +74,20 @@ class handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         try:
-            # Get the path from the request
             path = self.path.strip('/')
-
-            # If the path is for deleting a note, it should contain '/api/notes/{id}'
             if path.startswith('api/notes/'):
-                note_id = path.split('/')[-1]  # Extract the note ID from the path
-
+                note_id = path.split('/')[-1]
                 if not note_id:
                     self.send_error(400, "Note ID is required")
                     return
 
-                # Check if the note exists
                 response = table.get_item(Key={'id': note_id})
                 if 'Item' not in response:
                     self.send_error(404, "Note not found")
                     return
 
-                # Delete the note
                 table.delete_item(Key={'id': note_id})
 
-                # Send success response
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -108,3 +98,11 @@ class handler(BaseHTTPRequestHandler):
 
         except Exception as e:
             self.send_error(500, str(e))
+
+    def do_OPTIONS(self):
+        """Handle preflight CORS requests."""
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()

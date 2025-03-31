@@ -5,11 +5,10 @@
       "includeFiles": "noted/**"
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1.py",
-      "methods": ["GET", "POST", "DELETE", "OPTIONS"]
+      "source": "/api/(.*)",
+      "destination": "/api/$1.py"
     }
   ],
   "headers": [
