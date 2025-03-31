@@ -53,15 +53,19 @@ def create_note(note: Note):
         
         # Insert the note into DynamoDB
         try:
+            print(f"Generated UUID: {note_id}")
+
             response = table.put_item(
                 Item=item,
-                ConditionExpression='attribute_not_exists(id)'
+           
             )
             print(f"DynamoDB response: {response}")  # Debug log
         except ClientError as e:
-            print(f"DynamoDB error details: {e.response}")  # Debug log
-            raise
-        
+            error_code = e.response['Error']['Code']
+            if error_code == 'ConditionalCheckFailedException':
+                raise HTTPException(status_code=409, detail="Note with this ID already exists")
+            raise HTTPException(status_code=500, detail=f"Error creating note: {str(e)}")
+
         # Return the created item
         return {
             'id': item['id'],
