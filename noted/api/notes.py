@@ -27,7 +27,7 @@ class handler(BaseHTTPRequestHandler):
                 response = table.scan()
                 items = response.get('Items', [])
                 print(f"All note IDs: {[item['id'] for item in response.get('Items', [])]}")
-                print(f"Trying to fetch ID: '{note_id}'")
+          
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -75,36 +75,36 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, str(e))
 
-def do_DELETE(self):
-    try:
-        # Get the path from the request
-        path = self.path.strip('/')
+    def do_DELETE(self):
+        try:
+            # Get the path from the request
+            path = self.path.strip('/')
 
-        # If the path is for deleting a note, it should contain '/api/notes/{id}'
-        if path.startswith('api/notes/'):
-            note_id = path.split('/')[-1]  # Extract the note ID from the path
+            # If the path is for deleting a note, it should contain '/api/notes/{id}'
+            if path.startswith('api/notes/'):
+                note_id = path.split('/')[-1]  # Extract the note ID from the path
 
-            if not note_id:
-                self.send_error(400, "Note ID is required")
-                return
+                if not note_id:
+                    self.send_error(400, "Note ID is required")
+                    return
 
-            # Check if the note exists
-            response = table.get_item(Key={'id': note_id})
-            if 'Item' not in response:
-                self.send_error(404, "Note not found")
-                return
+                # Check if the note exists
+                response = table.get_item(Key={'id': note_id})
+                if 'Item' not in response:
+                    self.send_error(404, "Note not found")
+                    return
 
-            # Delete the note
-            table.delete_item(Key={'id': note_id})
+                # Delete the note
+                table.delete_item(Key={'id': note_id})
 
-            # Send success response
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({"message": "Note deleted successfully"}).encode())
-        
-        else:
-            self.send_error(404, "Invalid endpoint for deletion")
+                # Send success response
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"message": "Note deleted successfully"}).encode())
+            
+            else:
+                self.send_error(404, "Invalid endpoint for deletion")
 
-    except Exception as e:
-        self.send_error(500, str(e))
+        except Exception as e:
+            self.send_error(500, str(e))
