@@ -91,33 +91,39 @@ class handler(BaseHTTPRequestHandler):
             self.send_error(500, str(e))
 
     def do_DELETE(self):
-        try:
-            path = self.path.strip('/')
-            print("Received DELETE request for path:", path)  # Debugging
-            if path.startswith('api/notes/'):
-                note_id = path.split('/')[-1]
-                print("Extracted note ID:", note_id)  # Debugging
-                if not note_id:
-                    self.send_error(400, "Note ID is required")
-                    return
+                try:
+                    path = self.path.strip('/')
+                    if path.startswith('api/notes/'):
+                        note_id = path.split('/')[-1]
+                        print(f"Received ID for deletion: {note_id}, Type: {type(note_id)}")  # Debugging log
 
-                response = table.get_item(Key={'id': note_id})
-                if 'Item' not in response:
-                    self.send_error(404, "Note not found")
-                    return
+                        if not note_id:
+                            self.send_error(400, "Note ID is required")
+                            return
 
-                table.delete_item(Key={'id': note_id})
+                        response = table.get_item(Key={'id': note_id})
+                        print(f"DynamoDB response: {response}")  # Debugging log
 
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({"message": "Note deleted successfully"}).encode())
-            
-            else:
-                self.send_error(404, "Invalid endpoint for deletion")
+                        if 'Item' not in response:
+                            print(f"Note ID {note_id} not found in DynamoDB.")  # Debugging log
+                            self.send_error(404, "Note not found")
+                            return
 
-        except Exception as e:
-            self.send_error(500, str(e))
+                        table.delete_item(Key={'id': note_id})
+                        print(f"Deleted note ID: {note_id}")  # Debugging log
+
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({"message": "Note deleted successfully"}).encode())
+
+                    else:
+                        self.send_error(404, "Invalid endpoint for deletion")
+
+                except Exception as e:
+                    print(f"Error deleting note: {e}")  # Debugging log
+                    self.send_error(500, str(e))
+
 
     def do_OPTIONS(self):
         """Handle preflight CORS requests."""
