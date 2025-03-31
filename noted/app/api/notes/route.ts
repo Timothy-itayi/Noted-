@@ -15,18 +15,24 @@ export async function GET(request: Request) {
     if (!response.ok) {
       console.error('Python API fetch failed:', response.status);
       return NextResponse.json(
-        { error: 'Failed to fetch notes' },
+        { error: 'Failed to fetch notes', notes: [] }, // Return empty list on failure
         { status: response.status }
       );
     }
 
     const notes = await response.json();
+
+    // Ensure the response is an array (empty list fallback)
+    if (!Array.isArray(notes)) {
+      console.warn('Unexpected response format, returning empty list.');
+      return NextResponse.json({ notes: [] });
+    }
+
     return NextResponse.json(notes);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     console.error('Error fetching notes:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch notes' },
+      { error: 'Failed to fetch notes', notes: [] }, // Return empty list on error
       { status: 500 }
     );
   }
@@ -37,7 +43,16 @@ export async function POST(request: NextRequest) {
   console.log(`[${request.method}] ${request.url}`);
   try {
     const body = await request.json();
-    
+
+    // Validate input before sending to the backend
+    if (!body.title || !body.body) {
+      console.error('Validation failed: Title and body are required.');
+      return NextResponse.json(
+        { error: 'Title and body are required' },
+        { status: 400 }
+      );
+    }
+
     const response = await fetch(`${process.env.PYTHON_API_URL}/notes`, {
       method: 'POST',
       headers: {
@@ -56,7 +71,6 @@ export async function POST(request: NextRequest) {
 
     const note = await response.json();
     return NextResponse.json(note);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     console.error('Error creating note:', error);
     return NextResponse.json(
@@ -64,4 +78,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}
