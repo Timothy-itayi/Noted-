@@ -4,31 +4,17 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-import time
+
 import uuid
-import random
+
 
 # Initialize DynamoDB resource
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-2') 
 table = dynamodb.Table('Notes_Table')
 
-# Custom epoch (you can adjust this)
-CUSTOM_EPOCH = 1709251200000  
-
 def generate_note_id():
-    """Generate a unique ID using timestamp, random number, and UUID"""
-    # Get current timestamp in milliseconds
-    ts = int(time.time() * 1000) - CUSTOM_EPOCH
-    
-    # Generate a random number between 0 and 999
-    random_num = random.randint(0, 999)
-    
-    # Generate a short UUID (first 8 chars of UUID4)
-    short_uuid = str(uuid.uuid4())[:8]
-    
-    # Combine timestamp, random number, and short UUID
-    note_id = f"{ts:013d}{random_num:03d}-{short_uuid}"
-    
+    """Generate a unique ID using UUID4"""
+    note_id = str(uuid.uuid4())  # Generate a valid UUID
     return note_id
 
 class Note(BaseModel):
