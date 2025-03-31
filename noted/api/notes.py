@@ -97,7 +97,7 @@ class handler(BaseHTTPRequestHandler):
             print("Received DELETE request for path:", path)  # Debugging
             if path.startswith('api/notes/'):
                 note_id = path.split('/')[-1]
-                print("Extracted note ID:", note_id)  # Debugging
+                print(f"Received ID for deletion: {note_id}, Type: {type(note_id)}")  # Debugging log
                 if not note_id:
                     self.send_error(400, "Note ID is required")
                     return

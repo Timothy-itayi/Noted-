@@ -47,9 +47,12 @@ export async function GET(
 export async function DELETE(request: NextRequest) {
   try {
     const { pathname } = new URL(request.url);
-    const id = pathname.split('/').pop();
+    const id = pathname.split('/').pop()?.trim(); // Ensure ID is properly extracted
+    
+    console.log("Extracted ID for deletion:", id, "Type:", typeof id);
+    
 
-    console.log("Extracted ID for deletion:", id); // Debugging log
+
 
     if (!id) {
       console.error("Error: Invalid ID provided for delete.");
