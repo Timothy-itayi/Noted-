@@ -81,10 +81,14 @@ def create_note(note: Note):
 
 def get_note(note_id: str) -> Optional[Note]:
     try:
+        
         response = table.get_item(Key={'id': note_id})
+        
         if 'Item' in response:
-            print(f"Note found: {response['Item']}")  # Debug log
+            print(f"Note found: {response['Item']}") 
+  
             return Note(**response['Item'])
+         
         else:
             print(f"No note found with ID: {note_id}")  # Debug log
             return None
@@ -96,6 +100,12 @@ def get_all_notes() -> List[Note]:
     try:
         response = table.scan()
         items = response.get('Items', [])
+
+          # If there are no items, log it and return an empty list
+        if not items:
+            print("No notes found in the database.")
+            return []
+        
 
         notes = []
         for item in items:
