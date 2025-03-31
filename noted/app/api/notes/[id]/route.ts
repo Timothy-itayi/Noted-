@@ -45,14 +45,14 @@ export async function GET(
 // DELETE /api/notes/[id] - Delete a note
 
 export async function DELETE(request: NextRequest) {
+  const { pathname } = new URL(request.url);
+  const id = String(pathname.split('/').pop()?.trim()); // Explicitly cast to string
+
+   // Declare id with a type that allows undefined
   try {
-    const { pathname } = new URL(request.url);
-    const id = pathname.split('/').pop()?.trim(); // Ensure ID is properly extracted
-    
-    console.log("Extracted ID for deletion:", id, "Type:", typeof id);
-    console.log("Type of ID:", typeof id);
+  
 
-
+    console.log("Extracted ID for deletion:", id, "Type:", typeof id); // Log ID and its type
 
     if (!id) {
       console.error("Error: Invalid ID provided for delete.");
@@ -61,14 +61,19 @@ export async function DELETE(request: NextRequest) {
 
     const apiUrl = `${process.env.PYTHON_API_URL}/notes/${id}`;
     console.log("Deleting note at:", apiUrl); // Log the full API URL
+    console.log("Attempting to delete note at URL:", apiUrl);
 
     const response = await fetch(apiUrl, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
 
+    const responseText = await response.text();
+    console.error("Python API response failed with status:", response.status, "Response text:", responseText);
+    
     if (!response.ok) {
       console.error("Python API delete failed:", response.status, await response.text());
+      console.log("Failed DELETE response with ID:", id, "Type of ID:", typeof id); // Log failure with ID and type
       return NextResponse.json(
         { error: "Failed to delete note" },
         { status: response.status }
@@ -80,12 +85,15 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error("Error deleting note:", error);
+    console.log("Error caught: Type of ID in catch block:", typeof id); // Log type of ID in error block
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
+
+
 
 
 //same as delete essentially but we update the data base with the updated notes 
