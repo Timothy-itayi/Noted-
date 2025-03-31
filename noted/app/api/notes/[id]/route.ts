@@ -44,15 +44,15 @@ export async function GET(
 // Send id in the request body instead of appending url 
 // DELETE /api/notes/[id] - Delete a note
 
-export async function DELETE(request: NextRequest) {
-  const { pathname } = new URL(request.url);
-  const id = String(pathname.split('/').pop()?.trim()); // Explicitly cast to string
+export async function DELETE(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
+  // Access id from props
+  const { id } = await props.params;
 
-   // Declare id with a type that allows undefined
   try {
-  
-
-    console.log("Extracted ID for deletion:", id, "Type:", typeof id); // Log ID and its type
+    console.log("Extracted ID for deletion:", id, "Type:", typeof id);
 
     if (!id) {
       console.error("Error: Invalid ID provided for delete.");
@@ -60,8 +60,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const apiUrl = `${process.env.PYTHON_API_URL}/notes/${id}`;
-    console.log("Deleting note at:", apiUrl); // Log the full API URL
-    console.log("Attempting to delete note at URL:", apiUrl);
+    console.log("Deleting note at:", apiUrl);
 
     const response = await fetch(apiUrl, {
       method: "DELETE",
@@ -69,11 +68,8 @@ export async function DELETE(request: NextRequest) {
     });
 
     const responseText = await response.text();
-    console.error("Python API response failed with status:", response.status, "Response text:", responseText);
-    
     if (!response.ok) {
-      console.error("Python API delete failed:", response.status, await response.text());
-      console.log("Failed DELETE response with ID:", id, "Type of ID:", typeof id); // Log failure with ID and type
+      console.error("Python API delete failed:", response.status, responseText);
       return NextResponse.json(
         { error: "Failed to delete note" },
         { status: response.status }
@@ -85,7 +81,6 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error("Error deleting note:", error);
-    console.log("Error caught: Type of ID in catch block:", typeof id); // Log type of ID in error block
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -95,26 +90,26 @@ export async function DELETE(request: NextRequest) {
 
 
 
-
 //same as delete essentially but we update the data base with the updated notes 
 // PUT /api/notes/[id] - Update a note
 
 
-export async function PUT(request: NextRequest) {
-  const { pathname } = new URL(request.url);
-  const id = pathname.split('/').pop(); // Extract the id from the URL path
+export async function PUT(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
+  // Access id from props
+  const { id } = await props.params;
 
   if (!id) {
     return NextResponse.json({ error: 'Invalid ID provided for update' }, { status: 400 });
   }
 
-  console.log(`[${request.method}] ${request.url}`);
   console.log('Attempting to update note with ID:', id);
 
   try {
     const updateData = await request.json(); // Get the note data to update from the body
 
-    console.log('Python API URL:', process.env.PYTHON_API_URL);
     const pythonApiUrl = `${process.env.PYTHON_API_URL}/notes/${id}`;
     console.log('Full Python API URL:', pythonApiUrl);
 
